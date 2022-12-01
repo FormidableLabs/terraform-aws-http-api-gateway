@@ -34,3 +34,5 @@ runs:
         cp test/localstack.tf .
         cp test/terraform.tfvars .
         cp test/route53.tf .
+        rm -rf main.tf
+        cp test/main.tf .
