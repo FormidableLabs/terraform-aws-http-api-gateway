@@ -16,14 +16,6 @@ module "platform" {
   source = "github.com/FormidableLabs/terraform-aws-platform?ref=v0.1"
 }
 
-data "aws_acm_certificate" "wildcard" {
-  domain = "*.${var.domain_name}"
-}
-
-data "aws_route53_zone" "this" {
-  name = "${var.domain_name}."
-}
-
 resource "aws_cloudwatch_log_group" "this" {
   count = var.enable_access_logs ? 1 : 0
   name  = "/aws/api-gateway/${local.name}"
@@ -90,7 +82,7 @@ resource "aws_apigatewayv2_domain_name" "this" {
   domain_name = "${local.dns_prefix}.${var.domain_name}"
 
   domain_name_configuration {
-    certificate_arn = data.aws_acm_certificate.wildcard.arn
+    certificate_arn = aws_acm_certificate.certificate.arn
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
@@ -131,7 +123,7 @@ resource "aws_lambda_permission" "apigw_lambda_permission" {
 
 resource "aws_route53_record" "this" {
   name            = aws_apigatewayv2_domain_name.this.domain_name
-  zone_id         = data.aws_route53_zone.this.id
+  zone_id         = aws_route53_zone.api_zone.id
   type            = "A"
   allow_overwrite = true
 
