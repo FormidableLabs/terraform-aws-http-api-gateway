@@ -1,0 +1,36 @@
+name: Setup LocalStack
+description: Setups LocalStack to run Terraform Tests against
+
+runs:
+  using: "composite"
+  steps:
+    - name: Restore Localstack Cache if it exists
+      id: cache-docker-localstack
+      uses: actions/cache@v3
+      with:
+        path: ci/cache/docker/localstack
+        key: cache-docker-localstack
+
+    - name: Update Localstack Image Cache if cache miss
+      shell: bash
+      if: steps.cache-docker-localstack.outputs.cache-hit != 'true'
+      run: docker pull localstack/localstack && mkdir -p ci/cache/docker/localstack && docker image save localstack/localstack --output ./ci/cache/docker/localstack/localstack.tar
+
+    - name: Use LocalStack Image Cache if cache hit
+      shell: bash
+      if: steps.cache-docker-localstack.outputs.cache-hit == 'true'
+      run: docker image load --input ./ci/cache/docker/localstack/localstack.tar
+
+    - name: Start LocalStack
+      shell: bash
+      run: |
+        pip install --upgrade pyopenssl
+        pip install localstack awscli-local[ver1] # install LocalStack cli and awslocal
+        localstack start -d                       # Start LocalStack in the background
+
+        echo "Waiting for LocalStack startup..."  # Wait 30 seconds for the LocalStack container
+        localstack wait -t 30                     # to become ready before timing out
+        echo "Startup complete"
+        cp test/localstack.tf .
+        cp test/terraform.tfvars .
+        cp test/route53.tf .

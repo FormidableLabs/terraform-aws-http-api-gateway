@@ -1,0 +1,67 @@
+name: Terraform Unit Tests
+description: Runs Terraform Unit Tests Via TerraTest
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        cache: true
+        cache-dependency-path: test/go.sum
+
+    - name: Unit Tests Log
+      shell: bash
+      if: success() || failure()
+      working-directory: test
+      run: |
+        go test -timeout 30m 2>&1 | tee test_output.log
+        result_code=${PIPESTATUS[0]}
+        exit $result_code
+
+    - name: Format Logs
+      shell: bash
+      if: success() || failure()
+      working-directory: test
+      run: |
+        GOBIN=/usr/local/bin/ go install github.com/gruntwork-io/terratest/cmd/terratest_log_parser@latest
+        terratest_log_parser -testlog test_output.log -outputdir test_output
+
+    - name: Report Unit Test Summary
+      if: success() || failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          let stdout = '';
+          let stderr = '';
+          let heading = '';
+
+          const options = {};
+          options.listeners = {
+            stdout: (data) => {
+              stdout += data.toString();
+            },
+            stderr: (data) => {
+              stderr += data.toString();
+            }
+          };
+          await exec.exec('cat', ['test/test_output/summary.log'], options);
+          if (stdout.includes("PASS") || stdout.includes("ok")) {
+            heading = "### Terratest Unit Test Results - PASSED ✅"
+          } else {
+            heading = "### Terratest Unit Test Results - FAILED ❌"
+          }
+
+          const output = `${heading}
+
+          \`\`\`\n
+          ${stdout}
+          \`\`\`
+
+          `;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })

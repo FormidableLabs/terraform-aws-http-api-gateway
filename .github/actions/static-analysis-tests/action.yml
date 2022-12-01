@@ -1,0 +1,47 @@
+name: Terraform Static Analysis Tests
+description: Runs Terraform Static Analysis Tests - format, validate and plan
+
+runs:
+  using: "composite"
+  steps:
+    - name: Terraform Validate and Plan
+      shell: bash
+      run: |
+        terraform init
+        terraform fmt --recursive
+        terraform validate
+        terraform plan -lock=false -out terraform.plan
+        terraform show -no-color terraform.plan > terraform.text
+
+    - name: Report Terraform Plan
+      uses: actions/github-script@v6
+      with:
+        script: |
+          let stdout = '';
+          let stderr = '';
+
+          const options = {};
+          options.listeners = {
+            stdout: (data) => {
+              stdout += data.toString();
+            },
+            stderr: (data) => {
+              stderr += data.toString();
+            }
+          };
+          await exec.exec('cat', ['terraform.text'], options);
+
+          const output = `### Terraform Plan
+          <details><summary>Show Plan</summary>
+
+          \`\`\`\n
+          ${stdout}
+          \`\`\`
+
+          </details>`;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
