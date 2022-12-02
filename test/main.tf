@@ -16,6 +16,16 @@ module "platform" {
   source = "github.com/FormidableLabs/terraform-aws-platform?ref=v0.1"
 }
 
+data "aws_servicequotas_service_quota" "throttling_burst_limit" {
+  service_code = "apigateway"
+  quota_code   = "L-CDF5615A"
+}
+
+data "aws_servicequotas_service_quota" "throttling_rate_limit" {
+  service_code = "apigateway"
+  quota_code   = "L-8A5B8E43"
+}
+
 resource "aws_cloudwatch_log_group" "this" {
   count = var.enable_access_logs ? 1 : 0
   name  = "/aws/api-gateway/${local.name}"
@@ -46,6 +56,14 @@ resource "aws_apigatewayv2_stage" "this" {
 
   auto_deploy = true
 
+  default_route_settings {
+    detailed_metrics_enabled = true
+
+    # These require at least the account defaults because of this Terraform + AWS bug:
+    # https://github.com/hashicorp/terraform-provider-aws/issues/14742
+    throttling_burst_limit = coalesce(var.throttling_burst_limit, data.aws_servicequotas_service_quota.throttling_burst_limit.value)
+    throttling_rate_limit  = coalesce(var.throttling_rate_limit, data.aws_servicequotas_service_quota.throttling_rate_limit.value)
+  }
 
   dynamic "access_log_settings" {
     for_each = var.enable_access_logs ? [0] : []
