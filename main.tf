@@ -67,7 +67,6 @@ resource "aws_apigatewayv2_stage" "this" {
   auto_deploy = true
 
   default_route_settings {
-    count                    = var.enable_quota_limits ? 1 : 0
     detailed_metrics_enabled = true
 
     # These require at least the account defaults because of this Terraform + AWS bug:
