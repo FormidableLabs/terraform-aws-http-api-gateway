@@ -16,6 +16,7 @@ runs:
       shell: bash
       run: |
         awslocal acm list-certificates
+        awslocal service-quotas get-service-quota --service-code apigateway --quota-code L-CDF5615A
         terraform init
         terraform fmt --recursive
         terraform validate
