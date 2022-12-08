@@ -17,7 +17,7 @@ module "platform" {
 }
 
 data "aws_acm_certificate" "wildcard" {
-  domain = "*.${var.domain_name}"
+  domain = var.domain_name
 }
 
 data "aws_route53_zone" "this" {
