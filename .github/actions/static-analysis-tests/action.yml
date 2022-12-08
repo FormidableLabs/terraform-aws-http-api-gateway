@@ -4,9 +4,18 @@ description: Runs Terraform Static Analysis Tests - format, validate and plan
 runs:
   using: "composite"
   steps:
+    - name: Terraform Mock Route53 and ACM
+      working-directory: route53Only
+      shell: bash
+      run: |
+        terraform init
+        terraform apply -auto-approve
+        awslocal acm list-certificates
+
     - name: Terraform Validate and Plan
       shell: bash
       run: |
+        awslocal acm list-certificates
         terraform init
         terraform fmt --recursive
         terraform validate
