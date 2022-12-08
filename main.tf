@@ -25,11 +25,13 @@ data "aws_route53_zone" "this" {
 }
 
 data "aws_servicequotas_service_quota" "throttling_burst_limit" {
+  count        = var.enable_quota_limits ? 1 : 0
   service_code = "apigateway"
   quota_code   = "L-CDF5615A"
 }
 
 data "aws_servicequotas_service_quota" "throttling_rate_limit" {
+  count        = var.enable_quota_limits ? 1 : 0
   service_code = "apigateway"
   quota_code   = "L-8A5B8E43"
 }

@@ -33,6 +33,6 @@ provider "aws" {
     ssm            = "http://localhost:4566"
     stepfunctions  = "http://localhost:4566"
     sts            = "http://localhost:4566"
-    service-quotas = "http://localhost:4566"
+    servicequotas  = "http://localhost:4566"
   }
 }
