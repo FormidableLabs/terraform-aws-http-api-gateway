@@ -71,8 +71,8 @@ resource "aws_apigatewayv2_stage" "this" {
 
     # These require at least the account defaults because of this Terraform + AWS bug:
     # https://github.com/hashicorp/terraform-provider-aws/issues/14742
-    throttling_burst_limit = coalesce(var.throttling_burst_limit, data.aws_servicequotas_service_quota.throttling_burst_limit[*].value)
-    throttling_rate_limit  = coalesce(var.throttling_rate_limit, data.aws_servicequotas_service_quota.throttling_rate_limit[*].value)
+    throttling_burst_limit = coalesce(var.throttling_burst_limit, var.enable_quota_limits ? data.aws_servicequotas_service_quota.throttling_burst_limit[*].value : 0)
+    throttling_rate_limit  = coalesce(var.throttling_rate_limit, var.enable_quota_limits ? data.aws_servicequotas_service_quota.throttling_rate_limit[*].value : 0)
   }
 
   dynamic "access_log_settings" {
