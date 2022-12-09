@@ -48,3 +48,8 @@ variable "throttling_rate_limit" {
   type    = number
   default = null
 }
+
+variable "enable_quota_limits" {
+  type    = bool
+  default = true
+}

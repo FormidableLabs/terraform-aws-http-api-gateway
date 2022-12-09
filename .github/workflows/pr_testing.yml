@@ -10,3 +10,21 @@ jobs:
         with:
           fetch-depth: 0
       - uses: wagoid/commitlint-github-action@v5
+
+  hide-old-github-action-comments:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: int128/hide-comment-action@v1
+
+  static-analysis-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup LocalStack
+        id: setup-localstack
+        uses: ./.github/actions/setup-localstack
+
+      - name: Static Analysis Tests
+        id: static-analysis-tests
+        uses: ./.github/actions/static-analysis-tests
